@@ -6,33 +6,61 @@
     <title>Cuaca</title>
 </head>
 <body>
-    
+
+    <input type="text" id="location-input" placeholder="Masukkan lokasi...">
+    <button id="search-button">Cari</button>
+    <hr>
     <div id="tampilan"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script>
-        const url = "https://api.weatherapi.com/v1/current.json?key=10b97284bb6c42e5bdf11006250610&q=Yogyakarta&aqi=no";
-        
-        $.ajax({
-            url: url,
-            method: "GET",
-            success: function(data) {
-                const v = document.getElementById("tampilan");
-                let lokasi = data.location.name;
-                let suhu = data.current.temp_c;
-                let kelembapan = data.current.humidity;
 
-                v.innerHTML = `
-                    Cuaca : ${lokasi} <br>
-                    ------------------------ <br>
-                    Suhu : ${suhu}°C <br>
-                    Kelembapan : ${kelembapan}%
-                `;
-            },
-            error: function(error) {
-                console.error(error);
+    <script>
+        // Fungsi ini bisa dipanggil berulang kali dengan lokasi berbeda
+        function fetchWeather(location) {
+            const apiKey = "10b97284bb6c42e5bdf11006250610";
+            // URL sekarang dinamis berdasarkan input pengguna
+            const url = `https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${location}&aqi=no`;
+
+            $.ajax({
+                url: url,
+                method: "GET",
+                success: function(data) {
+                    const v = document.getElementById("tampilan");
+                    // Menampilkan data yang lebih lengkap
+                    v.innerHTML = `
+                        Lokasi: ${data.location.name}, ${data.location.country} <br>
+                        Lat/Lon: ${data.location.lat}, ${data.location.lon} <br>
+                        ------------------------ <br>
+                        Kondisi: ${data.current.condition.text} <br>
+                        Suhu: ${data.current.temp_c}°C <br>
+                        Kelembapan: ${data.current.humidity}% <br>
+                        Angin: ${data.current.wind_kph} kph
+                    `;
+                },
+                error: function(error) {
+                    document.getElementById("tampilan").innerText = "Lokasi tidak ditemukan.";
+                    console.error(error);
+                }
+            });
+        }
+
+        // Event listener untuk tombol cari
+        $("#search-button").on("click", function() {
+            const location = $("#location-input").val();
+            if (location) {
+                fetchWeather(location);
             }
         });
+        
+        // Event listener untuk tombol "Enter"
+        $("#location-input").on("keypress", function(e) {
+            if (e.key === "Enter") {
+                $("#search-button").click();
+            }
+        });
+
+        // Data awal saat halaman dimuat
+        fetchWeather("Yogyakarta");
     </script>
-</body>
+    </body>
 </html>
