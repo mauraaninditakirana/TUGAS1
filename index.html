@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cuaca</title>
+</head>
+<body>
+    
+    <div id="tampilan"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script>
+        const url = "https://api.weatherapi.com/v1/current.json?key=10b97284bb6c42e5bdf11006250610&q=Yogyakarta&aqi=no";
+        
+        $.ajax({
+            url: url,
+            method: "GET",
+            success: function(data) {
+                const v = document.getElementById("tampilan");
+                let lokasi = data.location.name;
+                let suhu = data.current.temp_c;
+                let kelembapan = data.current.humidity;
+
+                v.innerHTML = `
+                    Cuaca : ${lokasi} <br>
+                    ------------------------ <br>
+                    Suhu : ${suhu}°C <br>
+                    Kelembapan : ${kelembapan}%
+                `;
+            },
+            error: function(error) {
+                console.error(error);
+            }
+        });
+    </script>
+</body>
+</html>
