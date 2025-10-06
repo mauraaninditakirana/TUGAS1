@@ -3,64 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cuaca</title>
-</head>
+    <title>Info Cuaca</title>
+
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f4f8;
+        }
+        .weather-card {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        .search-container { display: flex; gap: 10px; margin-bottom: 1.5rem; }
+        #location-input { flex-grow: 1; border: 1px solid #ccc; border-radius: 8px; padding: 0.75rem; font-size: 1rem; }
+        #search-button { background-color: #007bff; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; }
+        #weather-display { display: none; }
+        #error-message { color: red; display: none; }
+    </style>
+    </head>
 <body>
 
-    <input type="text" id="location-input" placeholder="Masukkan lokasi...">
-    <button id="search-button">Cari</button>
-    <hr>
-    <div id="tampilan"></div>
-
+    <div class="weather-card">
+        <h2>Info Cuaca</h2>
+        <div class="search-container">
+            <input type="text" id="location-input" placeholder="Masukkan lokasi...">
+            <button id="search-button">Get</button>
+        </div>
+        <div id="weather-display">
+            <h3 id="location-name"></h3>
+            <p id="lat-lon"></p>
+            <img id="weather-icon" src="" alt="Weather Icon" style="width: 50px;">
+            <p id="condition"></p>
+            <p id="temperature"></p>
+            <p id="humidity"></p>
+            <p id="wind-speed"></p>
+        </div>
+        <p id="error-message">Lokasi tidak ditemukan.</p>
+    </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 
     <script>
-        // Fungsi ini bisa dipanggil berulang kali dengan lokasi berbeda
-        function fetchWeather(location) {
+        $(document).ready(function() {
             const apiKey = "10b97284bb6c42e5bdf11006250610";
-            // URL sekarang dinamis berdasarkan input pengguna
-            const url = `https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${location}&aqi=no`;
-
-            $.ajax({
-                url: url,
-                method: "GET",
-                success: function(data) {
-                    const v = document.getElementById("tampilan");
-                    // Menampilkan data yang lebih lengkap
-                    v.innerHTML = `
-                        Lokasi: ${data.location.name}, ${data.location.country} <br>
-                        Lat/Lon: ${data.location.lat}, ${data.location.lon} <br>
-                        ------------------------ <br>
-                        Kondisi: ${data.current.condition.text} <br>
-                        Suhu: ${data.current.temp_c}°C <br>
-                        Kelembapan: ${data.current.humidity}% <br>
-                        Angin: ${data.current.wind_kph} kph
-                    `;
-                },
-                error: function(error) {
-                    document.getElementById("tampilan").innerText = "Lokasi tidak ditemukan.";
-                    console.error(error);
-                }
-            });
-        }
-
-        // Event listener untuk tombol cari
-        $("#search-button").on("click", function() {
-            const location = $("#location-input").val();
-            if (location) {
-                fetchWeather(location);
+            function fetchWeather(location) {
+                const url = `https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${location}&aqi=no`;
+                $.ajax({
+                    url: url,
+                    method: "GET",
+                    success: function(data) {
+                        $("#error-message").hide();
+                        $("#weather-display").show();
+                        // Mengisi setiap elemen berdasarkan ID, bukan innerHTML
+                        $("#location-name").text(`${data.location.name}, ${data.location.country}`);
+                        $("#lat-lon").text(`Lat: ${data.location.lat}, Lon: ${data.location.lon}`);
+                        $("#weather-icon").attr("src", `https:${data.current.condition.icon}`);
+                        $("#condition").html(`<strong>Kondisi:</strong> ${data.current.condition.text}`);
+                        $("#temperature").html(`<strong>Suhu:</strong> ${data.current.temp_c}°C`);
+                        $("#humidity").html(`<strong>Kelembapan:</strong> ${data.current.humidity}%`);
+                        $("#wind-speed").html(`<strong>Angin:</strong> ${data.current.wind_kph} kph`);
+                    },
+                    error: function(error) {
+                        $("#weather-display").hide();
+                        $("#error-message").show();
+                    }
+                });
             }
+            $("#search-button").on("click", () => fetchWeather($("#location-input").val()));
+            $("#location-input").on("keypress", e => { if (e.key === "Enter") fetchWeather($("#location-input").val()); });
+            fetchWeather("Yogyakarta");
         });
-        
-        // Event listener untuk tombol "Enter"
-        $("#location-input").on("keypress", function(e) {
-            if (e.key === "Enter") {
-                $("#search-button").click();
-            }
-        });
-
-        // Data awal saat halaman dimuat
-        fetchWeather("Yogyakarta");
     </script>
     </body>
 </html>
