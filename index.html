@@ -3,49 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Info Cuaca</title>
-
+    <title>Info Cuaca Modern</title>
+    
     <style>
-        body {
-            font-family: system-ui, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            background-color: #f0f4f8;
-        }
-        .weather-card {
-            background-color: white;
-            padding: 2rem;
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 400px;
-        }
-        .search-container { display: flex; gap: 10px; margin-bottom: 1.5rem; }
-        #location-input { flex-grow: 1; border: 1px solid #ccc; border-radius: 8px; padding: 0.75rem; font-size: 1rem; }
-        #search-button { background-color: #007bff; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; }
-        #weather-display { display: none; }
-        #error-message { color: red; display: none; }
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        :root { --primary-color: #007bff; --text-color-light: #fff; --card-border-color: rgba(255, 255, 255, 0.4); }
+        body { font-family: 'Poppins', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background: linear-gradient(135deg, #2E3192 0%, #1BFFFF 100%); }
+        .weather-card { width: 100%; max-width: 420px; padding: 2rem; border-radius: 20px; background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(15px); border: 1px solid var(--card-border-color); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2); color: var(--text-color-light); text-align: center; }
+        .search-container { display: flex; gap: 10px; margin-bottom: 2rem; }
+        #location-input { flex-grow: 1; border: 1px solid var(--card-border-color); background: rgba(255, 255, 255, 0.2); color: var(--text-color-light); border-radius: 10px; padding: 0.75rem; font-size: 1rem; outline: none; }
+        #location-input::placeholder { color: rgba(255, 255, 255, 0.7); }
+        #search-button { background-color: var(--text-color-light); color: var(--primary-color); font-weight: 600; border: none; padding: 0.75rem 1.5rem; border-radius: 10px; cursor: pointer; }
+        #location-name { font-size: 2rem; font-weight: 600; margin: 0; }
+        .main-weather { display: flex; justify-content: center; align-items: center; gap: 1rem; margin: 1rem 0; }
+        #temperature { font-size: 5rem; font-weight: 700; line-height: 1; }
+        .condition-group { text-align: left; }
+        #weather-icon { width: 70px; height: 70px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2)); }
+        #condition { font-size: 1.25rem; font-weight: 500; margin: 0; text-transform: capitalize; }
+        .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--card-border-color); }
+        .detail-item { background: rgba(255, 255, 255, 0.1); padding: 1rem; border-radius: 10px; }
+        .detail-item strong { display: block; font-size: 0.8rem; opacity: 0.8; margin-bottom: 5px; }
+        .detail-item span { font-size: 1.1rem; font-weight: 600; }
+        #error-message { display: none; color: #ffdddd; }
     </style>
     </head>
 <body>
 
     <div class="weather-card">
-        <h2>Info Cuaca</h2>
         <div class="search-container">
-            <input type="text" id="location-input" placeholder="Masukkan lokasi...">
+            <input type="text" id="location-input" placeholder="Cari Kota...">
             <button id="search-button">Get</button>
         </div>
-        <div id="weather-display">
-            <h3 id="location-name"></h3>
-            <p id="lat-lon"></p>
-            <img id="weather-icon" src="" alt="Weather Icon" style="width: 50px;">
-            <p id="condition"></p>
-            <p id="temperature"></p>
-            <p id="humidity"></p>
-            <p id="wind-speed"></p>
+        <div id="weather-display" style="display:none;">
+            <h2 id="location-name"></h2>
+            <div class="main-weather">
+                <p id="temperature"></p>
+                <div class="condition-group">
+                    <img src="" alt="Weather Icon" id="weather-icon">
+                    <p id="condition"></p>
+                </div>
+            </div>
+            <div class="details-grid">
+                <div class="detail-item"><strong>KELEMBAPAN</strong><span id="humidity"></span></div>
+                <div class="detail-item"><strong>ANGIN</strong><span id="wind-speed"></span></div>
+                <div class="detail-item"><strong>LATITUDE</strong><span id="latitude"></span></div>
+                <div class="detail-item"><strong>LONGITUDE</strong><span id="longitude"></span></div>
+            </div>
         </div>
         <p id="error-message">Lokasi tidak ditemukan.</p>
     </div>
@@ -62,14 +65,14 @@
                     success: function(data) {
                         $("#error-message").hide();
                         $("#weather-display").show();
-                        // Mengisi setiap elemen berdasarkan ID, bukan innerHTML
                         $("#location-name").text(`${data.location.name}, ${data.location.country}`);
-                        $("#lat-lon").text(`Lat: ${data.location.lat}, Lon: ${data.location.lon}`);
+                        $("#temperature").html(`${Math.round(data.current.temp_c)}&deg;`);
                         $("#weather-icon").attr("src", `https:${data.current.condition.icon}`);
-                        $("#condition").html(`<strong>Kondisi:</strong> ${data.current.condition.text}`);
-                        $("#temperature").html(`<strong>Suhu:</strong> ${data.current.temp_c}°C`);
-                        $("#humidity").html(`<strong>Kelembapan:</strong> ${data.current.humidity}%`);
-                        $("#wind-speed").html(`<strong>Angin:</strong> ${data.current.wind_kph} kph`);
+                        $("#condition").text(data.current.condition.text);
+                        $("#humidity").text(`${data.current.humidity}%`);
+                        $("#wind-speed").text(`${data.current.wind_kph} kph`);
+                        $("#latitude").text(data.location.lat);
+                        $("#longitude").text(data.location.lon);
                     },
                     error: function(error) {
                         $("#weather-display").hide();
@@ -79,7 +82,7 @@
             }
             $("#search-button").on("click", () => fetchWeather($("#location-input").val()));
             $("#location-input").on("keypress", e => { if (e.key === "Enter") fetchWeather($("#location-input").val()); });
-            fetchWeather("Yogyakarta");
+            fetchWeather("Jakarta");
         });
     </script>
     </body>
