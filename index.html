@@ -4,16 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Info Cuaca Modern</title>
-    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
         :root { --primary-color: #007bff; --text-color-light: #fff; --card-border-color: rgba(255, 255, 255, 0.4); }
         body { font-family: 'Poppins', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background: linear-gradient(135deg, #2E3192 0%, #1BFFFF 100%); }
         .weather-card { width: 100%; max-width: 420px; padding: 2rem; border-radius: 20px; background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(15px); border: 1px solid var(--card-border-color); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2); color: var(--text-color-light); text-align: center; }
+        
+        .card-title { font-size: 1.75rem; font-weight: 500; margin: 0 0 1.5rem 0; }
         .search-container { display: flex; gap: 10px; margin-bottom: 2rem; }
         #location-input { flex-grow: 1; border: 1px solid var(--card-border-color); background: rgba(255, 255, 255, 0.2); color: var(--text-color-light); border-radius: 10px; padding: 0.75rem; font-size: 1rem; outline: none; }
         #location-input::placeholder { color: rgba(255, 255, 255, 0.7); }
         #search-button { background-color: var(--text-color-light); color: var(--primary-color); font-weight: 600; border: none; padding: 0.75rem 1.5rem; border-radius: 10px; cursor: pointer; }
+        
+        #loader { display: none; width: 40px; height: 40px; border: 4px solid rgba(255, 255, 255, 0.3); border-top: 4px solid var(--text-color-light); border-radius: 50%; animation: spin 1s linear infinite; margin: 2rem auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .weather-info { opacity: 0; transition: opacity 0.5s ease-in-out; }
+        .weather-info.visible { opacity: 1; }
         #location-name { font-size: 2rem; font-weight: 600; margin: 0; }
         .main-weather { display: flex; justify-content: center; align-items: center; gap: 1rem; margin: 1rem 0; }
         #temperature { font-size: 5rem; font-weight: 700; line-height: 1; }
@@ -22,20 +28,20 @@
         #condition { font-size: 1.25rem; font-weight: 500; margin: 0; text-transform: capitalize; }
         .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--card-border-color); }
         .detail-item { background: rgba(255, 255, 255, 0.1); padding: 1rem; border-radius: 10px; }
-        .detail-item strong { display: block; font-size: 0.8rem; opacity: 0.8; margin-bottom: 5px; }
+        .detail-item strong { display: block; font-size: 0.8rem; font-weight: 400; opacity: 0.8; margin-bottom: 5px; }
         .detail-item span { font-size: 1.1rem; font-weight: 600; }
-        #error-message { display: none; color: #ffdddd; }
+        #error-message { color: #ffdddd; margin-top: 1rem; display: none; }
     </style>
-    </head>
+</head>
 <body>
-
     <div class="weather-card">
+        <h1 class="card-title">Info Cuaca</h1>
         <div class="search-container">
             <input type="text" id="location-input" placeholder="Cari Kota...">
             <button id="search-button">Get</button>
         </div>
-        <div id="weather-display" style="display:none;">
-            <h2 id="location-name"></h2>
+        <div id="loader"></div>
+        <div id="weather-display" class="weather-info"> <h2 id="location-name"></h2>
             <div class="main-weather">
                 <p id="temperature"></p>
                 <div class="condition-group">
@@ -50,33 +56,49 @@
                 <div class="detail-item"><strong>LONGITUDE</strong><span id="longitude"></span></div>
             </div>
         </div>
-        <p id="error-message">Lokasi tidak ditemukan.</p>
+        <p id="error-message">Lokasi tidak ditemukan. Silakan coba lagi.</p>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-
+    
     <script>
         $(document).ready(function() {
             const apiKey = "10b97284bb6c42e5bdf11006250610";
+            const weatherDisplay = $("#weather-display");
+            const errorMessage = $("#error-message");
+            const loader = $("#loader");
+
             function fetchWeather(location) {
                 const url = `https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${location}&aqi=no`;
+                
+                // Kontrol untuk loader dan animasi dimulai
+                weatherDisplay.removeClass('visible');
+                errorMessage.hide();
+                loader.show();
+
                 $.ajax({
                     url: url,
                     method: "GET",
                     success: function(data) {
-                        $("#error-message").hide();
-                        $("#weather-display").show();
-                        $("#location-name").text(`${data.location.name}, ${data.location.country}`);
-                        $("#temperature").html(`${Math.round(data.current.temp_c)}&deg;`);
-                        $("#weather-icon").attr("src", `https:${data.current.condition.icon}`);
-                        $("#condition").text(data.current.condition.text);
-                        $("#humidity").text(`${data.current.humidity}%`);
-                        $("#wind-speed").text(`${data.current.wind_kph} kph`);
-                        $("#latitude").text(data.location.lat);
-                        $("#longitude").text(data.location.lon);
+                        setTimeout(() => { // Delay kecil agar loader terlihat
+                            loader.hide();
+                            $("#location-name").text(`${data.location.name}, ${data.location.country}`);
+                            $("#temperature").html(`${Math.round(data.current.temp_c)}&deg;`);
+                            $("#weather-icon").attr("src", `https:${data.current.condition.icon}`);
+                            $("#condition").text(data.current.condition.text);
+                            $("#humidity").text(`${data.current.humidity}%`);
+                            $("#wind-speed").text(`${data.current.wind_kph} kph`);
+                            $("#latitude").text(data.location.lat);
+                            $("#longitude").text(data.location.lon);
+                            
+                            // Menampilkan konten dengan animasi
+                            weatherDisplay.addClass('visible');
+                        }, 500);
                     },
                     error: function(error) {
-                        $("#weather-display").hide();
-                        $("#error-message").show();
+                        setTimeout(() => {
+                            loader.hide();
+                            errorMessage.show();
+                        }, 500);
                     }
                 });
             }
